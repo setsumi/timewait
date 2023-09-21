@@ -9,6 +9,9 @@
 //#include <locale>
 #include <codecvt>
 
+#include <shobjidl.h>
+#pragma comment(lib, "shell32.lib")
+
 //---------------------------------------------------------------------------
 #define MSG_WNDCLASS L"timewaitMessageWindow"
 #define IDT_TIMER1 1001
@@ -16,6 +19,34 @@
 HINSTANCE hInstance = GetModuleHandle(NULL);
 HWND hMsgWnd = NULL;
 int Countdown = 10; // default
+int CountdownMax = 10;
+
+//---------------------------------------------------------------------------
+void UpdateTaskbarProgress(HWND hwnd, ULONGLONG completed, ULONGLONG total)
+{
+	std::ignore = CoInitialize(NULL);
+	ITaskbarList3* pTaskbarList;
+	HRESULT hr = CoCreateInstance(CLSID_TaskbarList, NULL, CLSCTX_ALL, IID_ITaskbarList3, (void**)&pTaskbarList);
+	if (SUCCEEDED(hr))
+	{
+		hr = pTaskbarList->HrInit();
+		if (SUCCEEDED(hr))
+		{
+			if (!completed && !total) {
+				pTaskbarList->SetProgressState(hwnd, TBPF_NOPROGRESS);
+			}
+			else {
+				hr = pTaskbarList->SetProgressState(hwnd, TBPF_NORMAL);
+				if (SUCCEEDED(hr))
+				{
+					hr = pTaskbarList->SetProgressValue(hwnd, completed, total);
+				}
+			}
+		}
+		pTaskbarList->Release();
+	}
+	CoUninitialize();
+}
 
 //---------------------------------------------------------------------------
 std::string ws2s(const std::wstring wstr)
@@ -141,6 +172,7 @@ void print_countdown()
 	std::cout << buffer;
 
 	SetConsoleTitleA(buffer);
+	UpdateTaskbarProgress(GetConsoleWindow(), CountdownMax - Countdown, CountdownMax);
 }
 
 //---------------------------------------------------------------------------
@@ -217,6 +249,7 @@ int main(int argc, char** argv)
 
 	if (argc > 1 && (Countdown = strtol(argv[1], NULL, 10)) > 0) {
 		// argument is good, proceed
+		CountdownMax = Countdown;
 	}
 	else { // no/bad arguments, print help
 		print_help();
@@ -265,6 +298,7 @@ quit:
 	if (c_title) {
 		SetConsoleTitle(s_title);
 	}
+	UpdateTaskbarProgress(GetConsoleWindow(), 0, 0);
 
 	return 0;
 }
