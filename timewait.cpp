@@ -139,6 +139,8 @@ void print_countdown()
 	pos.X -= (SHORT)(tail_len + len);
 	SetConsoleCursorPosition(pos);
 	std::cout << buffer;
+
+	SetConsoleTitleA(buffer);
 }
 
 //---------------------------------------------------------------------------
@@ -209,6 +211,10 @@ int main(int argc, char** argv)
 	//for (int i = 0; i < argc; i++)
 	//	std::cout << argv[i] << std::endl;
 
+	// store console title
+	TCHAR s_title[1024];
+	DWORD c_title = GetConsoleTitle(s_title, 1024);
+
 	if (argc > 1 && (Countdown = strtol(argv[1], NULL, 10)) > 0) {
 		// argument is good, proceed
 	}
@@ -255,6 +261,11 @@ int main(int argc, char** argv)
 	}
 quit:
 	std::cout << std::endl;
+
+	if (c_title) {
+		SetConsoleTitle(s_title);
+	}
+
 	return 0;
 }
 
