@@ -246,6 +246,7 @@ int main(int argc, char** argv)
 	// store console title
 	TCHAR s_title[1024];
 	DWORD c_title = GetConsoleTitle(s_title, 1024);
+	int rv = 0;
 
 	if (argc > 1 && (Countdown = strtol(argv[1], NULL, 10)) > 0) {
 		// argument is good, proceed
@@ -282,14 +283,20 @@ int main(int argc, char** argv)
 			switch (key.wVirtualKeyCode) {
 			case 13: // Enter
 			case 32: // Space
-				goto quit; // exit-proceed
+				goto proceed; // exit-proceed
 			case 27: // Esc
 				std::cout << "\nAbort\n";
-				return 1; // exit-abort
+				rv = 1; // exit-abort
+				goto quit;
 			}
 			//std::cout << "key: " << key.uChar.AsciiChar << " code:  " << key.wVirtualKeyCode << std::endl;
 		}
-		if (Countdown <= 0) goto quit; // exit-proceed on timeout elapsed
+		// exit-proceed on timeout elapsed
+		if (Countdown <= 0) {
+		proceed:
+			std::cout << "\nProceed\n";
+			goto quit;
+		}
 		Sleep(1);
 	}
 quit:
@@ -300,6 +307,6 @@ quit:
 	}
 	UpdateTaskbarProgress(GetConsoleWindow(), 0, 0);
 
-	return 0;
+	return rv;
 }
 
